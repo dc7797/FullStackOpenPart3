@@ -42,7 +42,7 @@ app.use(morgan((tokens, req, res) => {
 
 
 app.get('/', (request, response) => {
-    response.send('hello world')
+    response.send('dist/index.html')
 })
 
 app.get('/api/persons', (request, response) => {
