@@ -30,17 +30,23 @@ app.get('/api/persons', (request, response) => {
     })
 })
 
-app.get('/info', (request, response) => {
-    const date = new Date;
+app.get('/info', (req, res) => {
+Person.find({}).then(persons => {
+    const date = new Date();
     const numberOfPersons = persons.length;
 
     const infoHtml = `
     <p>Phonebook has info for ${numberOfPersons} people</p> 
-    <p> ${date}</p>
-    `
+    <p>${date}</p>
+    `;
 
-    response.send(infoHtml)
+    res.send(infoHtml);
 })
+.catch(error => {
+    console.error(error);
+    res.status(500).send({ error: 'An error occurred while fetching data' });
+});
+  });
 
 app.get( '/api/persons/:id', (request, response, next) => {
     Person.findById(request.params.id)
@@ -64,7 +70,7 @@ app.get( '/api/persons/:id', (request, response, next) => {
 
 app.delete( '/api/persons/:id', (request, response, next) => {
     Person.findByIdAndDelete(request.params.id)
-    .then(result =>{
+    .then(() => {
         response.status(204).end()
     })
     .catch(error => next(error))
@@ -75,7 +81,7 @@ app.delete( '/api/persons/:id', (request, response, next) => {
 })
 
 const generateId = () => {
-    id = Math.floor(Math.random() * 10000)
+    let id = Math.floor(Math.random() * 10000)
     return id
 }
 
@@ -103,30 +109,29 @@ app.put('/api/persons/:id', (request, response, next) => {
         number: body.number,
         }
 
-    Person.findByIdAndUpdate(request.params.id, person, {new: true, runValidators: true, context: 'query'})
+    Person.findByIdAndUpdate(request.params.id, person, { new: true, runValidators: true, context: 'query' })
     .then(updatedPerson => response.json(updatedPerson))
     .catch(error => next(error))
 })
-    /* const existingPerson = persons.find(person => person.name === body.name)
-    if(existingPerson){
-        return response.status(400).json({
-            error: 'name already exist'
-        })
-    } */
+/* const existingPerson = persons.find(person => person.name === body.name)
+if(existingPerson){
+    return response.status(400).json({
+        error: 'name already exist'
+    })
+} */
 
 const unknownEndpoint = (request, response) => {
     response.status(404).send({ error: 'unknown endpoint' })
-  }
-  
-// handler of requests with unknown endpoint
+}
+
 app.use(unknownEndpoint)
 
 const errorHandler = (error, request, response, next) => {
     console.error(error.message)
     if(error.name === 'CastError'){
-        return response.status(400).send({error: 'malformatted id'})
+        return response.status(400).send({ error: 'malformatted id' })
     } else if(error.name === 'ValidationError'){
-        return response.status(400).send({error: error.message})
+        return response.status(400).send({ error: error.message })
     }
     next(error)
 }
@@ -138,27 +143,3 @@ const PORT = process.env.PORT
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
-
-/* let persons = [
-    { 
-    "id": 1,
-    "name": "Arto Hellas", 
-    "number": "040-123456"
-    },
-    { 
-    "id": 2,
-    "name": "Ada Lovelace", 
-    "number": "39-44-5323523"
-    },
-    { 
-    "id": 3,
-    "name": "Dan Abramov", 
-    "number": "12-43-234345"
-    },
-    { 
-    "id": 4,
-    "name": "Mary Poppendieck", 
-    "number": "39-23-6423122"
-    }
-]
- */
